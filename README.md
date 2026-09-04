@@ -9,7 +9,7 @@
 Each lab targets one or more official DCA exam domains and was executed on physical infrastructure I administer — not a disposable cloud sandbox. The labs progress from single-host isolation primitives to a 3-node Swarm cluster that is later torn down and rebuilt as a k3s (Kubernetes) cluster on the same VMs, so the networking, storage and security concepts can be compared side by side across both orchestrators.
 
 | Lab | DCA domain | Weight | Topics |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | [`lab0-security-fundamentals`](labs/lab0-security-fundamentals.md) | Security | 15% | namespaces, capabilities, cgroups, seccomp, AppArmor |
 | [`lab1-dct-image-scanning`](labs/lab1-dct-image-scanning.md) | Security | 15% | Docker Content Trust (conceptual), Trivy CVE scanning |
 | [`lab2-docker-networking`](labs/lab2-docker-networking.md) | Networking | 15% | CNM, IPAM, bridge/overlay, embedded DNS, troubleshooting |
@@ -18,7 +18,7 @@ Each lab targets one or more official DCA exam domains and was executed on physi
 | [`lab5-storage-installation`](labs/lab5-storage-installation.md) | Install & Config / Storage | 15% + 10% | daemon.json, storage drivers, volumes, NFS, k3s PV/PVC |
 | [`lab6-security-ucp-cosign`](labs/lab6-security-ucp-cosign.md) | Security | 15% | UCP/Docker EE (conceptual), image signing with cosign |
 
-```
+```text
 Proxmox VE homelab (i5-12600H / 32 GB)
 ┌───────────────────────────────────────────────────────────┐
 │  docker-lab-manager      docker-lab-worker1  docker-lab-worker2
@@ -46,15 +46,19 @@ Passing the DCA exam required hands-on fluency across six weighted domains, not 
 ## Design decisions
 
 ### 1. Real infrastructure over managed lab platforms
+
 KodeKloud-style sandboxes are fine for spaced-repetition practice, but they reset on every session and can't surface persistence issues (Swarm Raft state across restarts, NFS mounts surviving a reboot, storage driver choice at install time). I provisioned three Debian 12 VMs on my own Proxmox host instead and kept them alive across the whole lab sequence. **Rejected:** cloud free-tier VMs — same persistence benefit, but adds cost and network latency irrelevant to the exam content.
 
 ### 2. Execution log, not tutorial
+
 Each lab's `-doc.md` captures the commands actually run and their actual output, including the ones that failed on the first try. A tutorial format would have been faster to write but would hide the debugging reasoning that is the real evidence of competence. **Rejected:** cleaning up the log into a "happy path" writeup — it reads better but proves less.
 
 ### 3. Swarm and k3s on the same three nodes
+
 Domain 1 (Orchestration, 25% of the exam) expects familiarity with Swarm; CKA prep (next certification) needs the same muscle memory in Kubernetes. Rather than standing up a second cluster, I tore Swarm down and reinstalled the same VMs as a k3s cluster (`lab3`), so concepts like service replicas vs. Deployments, or overlay networks vs. CNI, could be compared on identical hardware. **Rejected:** running both concurrently on separate node pools — would have doubled the RAM budget for no additional exam-relevant signal.
 
 ### 4. Document what's deprecated, not just what works
+
 Docker Content Trust (`docker trust sign`, `DOCKER_CONTENT_TRUST=1`) was removed with Notary v1 in Docker 25+; the exam still asks about it conceptually. `lab1` and `lab6` document this explicitly — what the topic requires you to know, why it can't be executed on 29.x, and cosign as the practical replacement that pipelines actually use today. **Rejected:** skipping the non-executable topics — they're still graded on the exam.
 
 ---
@@ -99,10 +103,10 @@ Each lab follows the same shape: environment/prerequisites → setup → numbere
 ## Project status
 
 | Milestone | Status |
-|---|---|
+| --- | --- |
 | DCA exam passed | ✅ 2026-05-30 |
 | 7 labs executed and documented | ✅ |
-| Portfolio repo published | ✅  |
+| Portfolio repo published | ✅ |
 
 ---
 

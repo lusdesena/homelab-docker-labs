@@ -18,7 +18,7 @@ DCA competencies covered: 4.1, 4.2, 4.4, 4.5, 4.6, 4.7, 4.8, 4.10, 4.11
 ## Environment
 
 | Element | Value |
-|---|---|
+| --- | --- |
 | Node | Docker Labs VM — <MANAGER_IP> |
 | OS | Debian 12 |
 | Docker Engine | 29.3.1 (verify with `docker version`) |
@@ -26,6 +26,7 @@ DCA competencies covered: 4.1, 4.2, 4.4, 4.5, 4.6, 4.7, 4.8, 4.10, 4.11
 | User | <admin_user> (sudo available) |
 
 Prerequisites:
+
 - Docker Engine installed and the daemon active (`systemctl is-active docker`)
 - The <admin_user> user belongs to the docker group (`groups | grep docker`)
 - `iproute2` tooling available on the VM (`ip` and `bridge` commands)
@@ -592,6 +593,7 @@ docker network rm lab2-net-a lab2-net-b 2>/dev/null || true
 **4.3 — Traffic types between Docker Engine, Registry, and UCP**
 
 Docker manages three types of traffic in a cluster:
+
 - **Management plane:** communication between Swarm nodes (port 2377/tcp for Raft)
 - **Data plane:** container network traffic (overlay VXLAN 4789/udp, gossip 7946/tcp+udp)
 - **Registry traffic:** image pull/push (HTTPS 443/tcp to the registry)
@@ -629,6 +631,7 @@ equivalent to Docker's CNM, but without libnetwork drivers.
 ## DCA/SRE Lessons
 
 ### Topics covered with hands-on exercises
+
 - **4.1** Container Network Model (CNM) and IPAM drivers
 - **4.2** Built-in drivers: bridge, host, none — use cases
 - **4.4** Create and manage user-defined bridge networks + automatic DNS
@@ -640,12 +643,14 @@ equivalent to Docker's CNM, but without libnetwork drivers.
 - **4.11** Connectivity troubleshooting with logs and inspection
 
 ### Conceptual topics (no environment available)
+
 - **4.3** Traffic types (management, data, registry)
 - **4.9** L7 HTTP/HTTPS load balancing (Docker EE / UCP)
 - **4.12** Routing to Kubernetes pods (ClusterIP / NodePort)
 - **4.13** Kubernetes Container Network Model
 
 ### Key exam takeaways
+
 - The **default** bridge network does NOT have DNS between containers. **User-defined** networks do.
 - `--network host` removes network isolation — the container uses the host's stack.
 - In Swarm, **ingress** uses the routing mesh (any node responds); **host** mode binds the port only to the node running the replica.

@@ -1,11 +1,14 @@
 # Lab 6 — UCP Concepts & Image Signing with cosign — Execution Log
 
 ## Objective
+
 Cover the 7 remaining topics in Domain 5 (Security):
+
 - **Conceptual** (no Docker EE environment available): 5.6, 5.7, 5.8, 5.11, 5.12, 5.13 — UCP RBAC, identity roles, external certificates, LDAP/AD, client bundles
 - **Practical** (executable on Docker 29.x): 5.10 — image signing and verification with cosign
 
 Topics covered:
+
 - **Domain 5**: 5.6, 5.7, 5.8, 5.10, 5.11, 5.12, 5.13
 
 ---
@@ -13,12 +16,13 @@ Topics covered:
 ## Environment
 
 | Node | IP | Role | Docker |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | docker-labs | <MANAGER_IP> | Swarm manager / k3s server | 29.x |
 | swarm-worker1 | <WORKER1_IP> | Swarm worker | 29.x |
 | swarm-worker2 | <WORKER2_IP> | Swarm worker | 29.x |
 
 Prerequisites:
+
 - Local private registry running at `localhost:5000` (set up in Lab 4)
 - If it's not running: `docker run -d -p 5000:5000 --name registry registry:2`
 - Working directory: `~/lab6`
@@ -58,7 +62,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 #### Subjects (who)
 
 | Type | Description |
-|---|---|
+| --- | --- |
 | User | Individual account (local or LDAP) |
 | Team | Group of users within an organization |
 | Service account | Identity for automated services (CI/CD) |
@@ -67,7 +71,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 #### Predefined UCP roles (from least to most privilege)
 
 | Role | Can do |
-|---|---|
+| --- | --- |
 | `None` | No access — explicit block |
 | `View Only` | View resources, cannot modify |
 | `Restricted Control` | Deploy containers, no `--privileged`, no host access |
@@ -76,7 +80,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 
 #### Custom roles
 
-```
+```text
 # Composition of a custom role in UCP:
 # Name → List of allowed operations (API permissions)
 # Example: "deploy-only"
@@ -89,7 +93,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 #### Exam reference 5.6
 
 | Concept | Key fact |
-|---|---|
+| --- | --- |
 | Most restrictive role | `None` — explicitly denies |
 | Role for unprivileged CI/CD | `Restricted Control` |
 | Role for full management of a namespace | `Full Control` over the collection |
@@ -102,7 +106,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 
 #### UCP architecture
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │              UCP Managers               │
 │  (Control Plane — minimum 3 for HA)     │
@@ -128,7 +132,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 #### Manager vs Worker comparison
 
 | Feature | Manager | Worker |
-|---|---|---|
+| --- | --- | --- |
 | Control plane | Yes | No |
 | Raft consensus | Participates | No |
 | Runs workloads | Possible but not recommended | Yes |
@@ -140,7 +144,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 #### UCP ports
 
 | Port | Protocol | Use |
-|---|---|---|
+| --- | --- | --- |
 | 443 | TCP | UCP web UI and API |
 | 2376 | TCP | Docker Engine TLS (swarm) |
 | 2377 | TCP | Swarm manager communication |
@@ -152,7 +156,7 @@ UCP (Universal Control Plane) manages identities through **subjects**, **roles**
 #### Exam reference 5.7
 
 | Concept | Key fact |
-|---|---|
+| --- | --- |
 | Minimum managers for HA | 3 (tolerates 1 failure) |
 | Recommended max managers | 7 (tolerates 3 failures) |
 | Workers without quorum | Do not affect the control plane |
@@ -201,7 +205,7 @@ curl -X POST \
 #### Certificate requirements
 
 | Field | Requirement |
-|---|---|
+| --- | --- |
 | SAN (Subject Alt Name) | Must include the hostname and all IPs of the UCP cluster |
 | Type | X.509 v3 |
 | Format | PEM |
@@ -211,7 +215,7 @@ curl -X POST \
 #### Exam reference 5.8
 
 | Concept | Key fact |
-|---|---|
+| --- | --- |
 | Default UCP cert | Self-signed — browsers show a warning |
 | Critical cert field | SAN must include all cluster IPs/hostnames |
 | How to replace in UCP | `docker/ucp install --external-cert` or web UI Admin Settings |
@@ -226,7 +230,7 @@ curl -X POST \
 
 A **grant** connects three elements:
 
-```
+```text
 Grant = Subject + Role + Collection
           ↓         ↓        ↓
         (who)   (what they  (on what)
@@ -237,7 +241,7 @@ Grant = Subject + Role + Collection
 
 Collections are hierarchical groupings of Docker resources (nodes, services, volumes, secrets, configs):
 
-```
+```text
 /                          ← root collection (admins only)
 ├── /Shared                ← shared resources
 │   └── /System            ← UCP system resources
@@ -250,7 +254,7 @@ Collections are hierarchical groupings of Docker resources (nodes, services, vol
 
 #### RBAC configuration example
 
-```
+```text
 Scenario: the "devs" team can deploy to /dev but not to /prod
 
 Grants:
@@ -270,7 +274,7 @@ Grants:
 #### Exam reference 5.11
 
 | Concept | Key fact |
-|---|---|
+| --- | --- |
 | Authorization unit | Grant = Subject + Role + Collection |
 | Collection inheritance | A grant on `/dev` applies to `/dev/frontend` and `/dev/backend` |
 | UCP admin role | Has access to the root collection `/` |
@@ -284,13 +288,13 @@ Grants:
 #### UCP authentication modes
 
 | Mode | Description |
-|---|---|
+| --- | --- |
 | Managed | Local users created in UCP |
 | LDAP / Active Directory | UCP delegates authentication to an external directory |
 
 #### LDAP configuration in UCP
 
-```
+```text
 Admin Settings → Authentication & Authorization → LDAP
 
 Required parameters:
@@ -308,7 +312,7 @@ Optional parameters:
 
 #### LDAP authentication flow
 
-```
+```text
 User → UCP login → UCP queries LDAP → LDAP validates credentials
                                       → UCP assigns teams based on LDAP groups
                                       → Grant determines final permissions
@@ -317,7 +321,7 @@ User → UCP login → UCP queries LDAP → LDAP validates credentials
 #### Exam reference 5.12
 
 | Concept | Key fact |
-|---|---|
+| --- | --- |
 | Authentication with LDAP | UCP never stores the password — it validates against LDAP |
 | Group synchronization | LDAP group → UCP team (automatic at the configured interval) |
 | AD user attribute | `sAMAccountName` |
@@ -332,7 +336,7 @@ A client bundle is a package of certificates and scripts that lets the local Doc
 
 #### Client bundle contents
 
-```
+```text
 client-bundle.zip
 ├── ca.pem          ← UCP's CA, used to verify the server
 ├── cert.pem        ← User certificate
@@ -382,7 +386,7 @@ unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH
 #### Exam reference 5.13
 
 | Concept | Key fact |
-|---|---|
+| --- | --- |
 | Purpose | Connect the local CLI to UCP remotely via mTLS |
 | How to activate | `source env.sh` (Linux) |
 | What `env.sh` configures | `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, `DOCKER_CERT_PATH` |
@@ -557,7 +561,7 @@ The following checks were performed on each of these signatures:
 ### Exercise 13 — DCT vs cosign comparison [CONCEPTUAL]
 
 | Feature | Docker Content Trust (Notary v1) | cosign (Sigstore) |
-|---|---|---|
+| --- | --- | --- |
 | Availability | Removed in Docker 25+ | Current standard |
 | Environment variable | `DOCKER_CONTENT_TRUST=1` | N/A (explicit CLI) |
 | Signature storage | Separate Notary server | In the registry itself (OCI artifact) |
@@ -604,7 +608,7 @@ rm -rf ~/lab6
 ## Common issues
 
 | Issue | Cause | Solution |
-|---|---|---|
+| --- | --- | --- |
 | `cosign: command not found` | Binary not in PATH | Verify `/usr/local/bin/cosign` and permissions |
 | `Error: signing localhost:5000/...` | HTTP registry without the insecure flag | Add `--allow-insecure-registry` |
 | `no matching signatures found` | Image not signed or wrong key | Verify with the correct public key |
@@ -618,6 +622,7 @@ rm -rf ~/lab6
 ### Domain 5 — Security (15%)
 
 **UCP / Docker EE (conceptual):**
+
 - The UCP authorization model is `Grant = Subject + Role + Collection` — memorize this formula for the exam
 - `Restricted Control` is the role for multi-tenant environments where host access can't be granted
 - **Client bundles** are the mechanism for using the `docker` CLI against UCP — `source env.sh` → DOCKER_HOST points to UCP
@@ -626,10 +631,12 @@ rm -rf ~/lab6
 - On the exam: "describe" and "compare" questions don't require knowing the exact UCP CLI, just the conceptual model
 
 **cosign / Image signing (practical):**
+
 - Notary v1 + `DOCKER_CONTENT_TRUST=1` were removed in Docker 25+ — they have no effect on Docker 29.x
 - cosign stores the signature as an OCI artifact in the same registry — no additional infrastructure required
 - `cosign sign --key` (with key) is the most common mode; keyless signing requires OIDC/Fulcio (cloud)
 - In CI/CD pipelines: sign on publish (`cosign sign`) and verify before deploying (`cosign verify`)
 
 **DCA mapping:**
+
 - Domain 5: Security — **15% of the exam** (topics 5.6, 5.7, 5.8, 5.10, 5.11, 5.12, 5.13)

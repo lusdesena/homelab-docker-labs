@@ -19,7 +19,7 @@ DCA competencies: **1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.1
 ## Environment
 
 | Role | VMID | IP | Resources | OS |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Swarm manager / k3s server | 200 | <MANAGER_IP> | 4 vCPU / 8 GB | Debian 12 / Docker 29.3.1 |
 | Swarm worker1 / k3s agent1 | 201 | <WORKER1_IP> | 2 vCPU / 2 GB | Debian 12 (fresh install) |
 | Swarm worker2 / k3s agent2 | 202 | <WORKER2_IP> | 2 vCPU / 2 GB | Debian 12 (fresh install) |
@@ -978,6 +978,7 @@ docker info | grep "Swarm"
 ---
 
 ### Step 2B — Install the k3s server (VM 200)
+
 ```bash
 # Connect to the manager (future k3s server)
 # ssh -J <admin_user>@vps -p 2222 <admin_user>@localhost
@@ -1511,7 +1512,7 @@ echo "=== Verification complete ==="
 ## Incidents
 
 | Incident | Probable cause | Solution |
-|---|---|---|
+| --- | --- | --- |
 | `docker swarm join` fails with "token invalid" | Expired token or incorrect IP | Regenerate: `docker swarm join-token --rotate worker` |
 | Task stuck in `pending` on a specific node | Constraint not satisfied on that node | `docker service ps <svc> --no-trunc` → adjust labels |
 | `--network host` fails with replicas >1 | Host networking incompatible with routing mesh | Use `global` mode with a role constraint |
@@ -1521,11 +1522,13 @@ echo "=== Verification complete ==="
 | K8s Secret not mounting | Wrong namespace | Verify the pod and the secret are in the same namespace |
 | `docker swarm leave` fails with "manager" | The node is an active manager | `--force` only if it's the last manager or it has already been demoted |
 | kubectl autocomplete not available | Autocompletion not configured in bashrc | Add to ~/.bashrc:  echo 'source <(kubectl completion bash)' >> ~/.bashrc; source ~/.bashrc
+
 ---
 
 ## DCA/SRE Lessons
 
 ### Key points for the DCA exam
+
 - **Quorum:** always odd. 3 managers tolerates 1 failure; 5 tolerates 2.
 - **Global mode:** exactly 1 task per node. Cannot be changed after creation.
 - **Constraints:** MUST. If no node satisfies it → the task stays pending.
@@ -1538,6 +1541,7 @@ echo "=== Verification complete ==="
 - **docker secret:** encrypted in the Raft store. K8s secret: in etcd/SQLite, encryption at rest optional.
 
 ### Notes for CKA (pre-training)
+
 - Exercises 13 and 14 use the real Kubernetes API — the same objects and commands as CKA.
 - k3s is CNCF-certified Kubernetes: `kubectl`, YAML manifests, rolling updates, and RBAC are identical to kubeadm.
 - For CKA: practice `kubectl apply -f` instead of imperative commands, and know the YAML manifests for Pod, Deployment, Service, ConfigMap, and Secret.

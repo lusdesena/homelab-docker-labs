@@ -18,7 +18,9 @@ Practically verify the Docker Engine security mechanisms from Week 1. Demonstrat
 | 6 | UID remapping | userns-remap | `ps -o user= -p <PID>` with and without remap |
 
 ## Commands
+
 ### Setup
+
 ```bash
 sudo aa-status | head -20 #AppArmor Module info (first 20 lines)
 apparmor module is loaded.
@@ -42,9 +44,13 @@ apparmor module is loaded.
 0 processes have profiles defined.
 0 processes are in enforce mode.
 ```
+
 ## Exercise 1 - Namespaces: demonstrate PID, NET and USER isolation
+
 **Objective:** verify that each container lives in namespaces separate from the host.
+
 ### Namespace: PID
+
 ```bash
 docker run --rm alpine sh -c "echo 'PID inside:'; ps aux | head -5"
 PID inside:
@@ -66,9 +72,11 @@ PID exists on host
 docker inspect -f '{{.State.Pid}}' ns-test
 4891
 #We see the container's PID on the host machine, -f only returns the field between ''
-docker rm -f ns-test #Forces the rm, even though the container is running
+#docker rm -f ns-test #Forces the rm, even though the container is running
 ```
+
 ### Namespace NET
+
 ```bash
 docker run --rm alpine ip a
 2: eth0@if22: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
@@ -82,7 +90,9 @@ docker run --rm --network host alpine ip a | grep -E "eth0|ens"
     inet <MANAGER_IP>/24 brd <LAN_BROADCAST_IP> scope global eth0
 #Same IP as the host, docker-labs VM
 ```
+
 ### Namespace User
+
 ```bash
 #without userns-remap UID0 inside = UID 0 on host, hence a risk
 docker run --rm alpine id
@@ -94,7 +104,9 @@ root        5425  0.0  0.0   1624     4 ?        Ss   13:53   0:00 sleep 350
 ```
 
 ## Exercise 2 - Capabilities: drop ALL, selective add, --privileged
+
 **Objective:** apply the principle of least privilege with capabilities.
+
 ```bash
 docker run --rm alpine cat /proc/self/status | grep -i cap
 CapInh:	0000000000000000
@@ -157,8 +169,11 @@ CapAmb:	0000000000000000
 Can see host devices:
 15
 ```
+
 ## Exercise 3 - cgroups: CPU and Memory Resource Limits
+
 **Objective:** apply resource limits and verify that the kernel enforces them.
+
 ```bash
 docker run --rm alpine sh -c "cat /sys/fs/cgroup/memory/memory.\
 > limit_in_bytes 2>/dev/null || \
@@ -197,8 +212,11 @@ real	0m28.518s
 user	0m0.004s
 sys	0m0.009s
 ```
+
 ## Exercise 4 — Seccomp: default profile vs unconfined
+
 **Objective:** verify that Docker applies the default seccomp profile and demonstrate it.
+
 ```bash
 docker info | grep -i seccomp
   seccomp
@@ -244,8 +262,11 @@ docker inspect sec-test | grep -i SecurityOpt
             "SecurityOpt": null,
 #Implies default seccomp profile
 ```
+
 ## Exercise 5 — AppArmor: verify the docker-default profile
+
 **Objective:** confirm that AppArmor is active and understand what it restricts.
+
 ```bash
 sudo aa-status | grep docker
    docker-default
@@ -263,8 +284,11 @@ docker run --rm \
 unconfined
 #Shows unconfined
 ```
+
 ## Exercise 6 — userns-remap: demonstrate UID remapping
+
 **Objective:** contrast the container process UID on the host with and without userns-remap.
+
 ```bash
 docker run -d --name uid-before alpine sleep 300
 HOST_PID=$(docker inspect -f '{{.State.Pid}}' uid-before)
@@ -286,6 +310,7 @@ cat /proc/$(docker inspect -f '{{.State.Pid}}' $(docker run -d alpine sleep 60))
 #check the default userns-remap mapping
 #Done with a test user created in the Week 1 3.8 section
 ```
+
 ## Quick verification
 
 ```bash
@@ -343,7 +368,8 @@ docker run --rm --memory 64m --memory-swap 64m alpine sh -c \
 ```
 
 Output:
-```
+
+```bash
 128+0 records in
 128+0 records out
 134217728 bytes (128.0MB) copied, 0.002347 seconds, 53.3GB/s
@@ -359,7 +385,8 @@ docker run --rm --memory 64m --memory-swap 64m alpine sh -c \
 ```
 
 Output:
-```
+
+```bash
 128+0 records in
 128+0 records out
 134217728 bytes (128.0MB) copied, 0.207151 seconds, 617.9MB/s
@@ -375,7 +402,8 @@ docker run --rm --memory 64m --memory-swap 64m --tmpfs /tmp \
 ```
 
 Output:
-```
+
+```bash
 OOM or error
 ```
 
@@ -384,7 +412,7 @@ Reason: `--tmpfs /tmp` mounts `/tmp` in RAM. Accumulating 128 MB in memory with 
 **Summary table:**
 
 | Command | Actual destination | RAM consumed | OOM |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `of=/dev/null` | discarded | ~1 MB (buffer) | No |
 | `of=/tmp/bigfile` (without `--tmpfs`) | overlay/disk | ~1 MB (buffer) | No |
 | `of=/tmp/bigfile` + `--tmpfs /tmp` | RAM (tmpfs) | cumulative | Yes |
@@ -404,6 +432,7 @@ time docker run --rm --cpus 0.5 alpine sh -c "for i in \$(seq 1 1000000); do ech
 ```
 
 Key points about the command:
+
 - `time` measures the `real`, `user`, and `sys` times of the Docker process on the host.
 - The `for i in $(seq 1 1000000)` loop generates pure CPU load with no network or disk I/O.
 - `echo $i > /dev/null` discards the output so the bottleneck is CPU only.

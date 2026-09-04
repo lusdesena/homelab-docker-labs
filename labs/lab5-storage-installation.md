@@ -1,9 +1,11 @@
 # Lab 5 — Storage, Volumes & Installation — Execution Log
 
 ## Objective
+
 Cover Domain 6 (Storage & Volumes) in full and the remaining gaps in Domain 3 (Installation & Configuration) in a real Docker 29.x + 3-node Swarm + k3s environment.
 
 Topics covered:
+
 - **Domain 3**: 3.2, 3.3, 3.4, 3.6, 3.9 (hands-on) · 3.1, 3.5, 3.10, 3.11 (Docker EE conceptual)
 - **Domain 6**: 6.1, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9 (hands-on) · 6.2, 6.3 (conceptual)
 
@@ -12,12 +14,13 @@ Topics covered:
 ## Environment
 
 | Node | IP | Role | Docker |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | docker-labs | <MANAGER_IP> | Swarm manager / k3s server | 29.4.2 |
 | swarm-worker1 | <WORKER1_IP> | Swarm worker / k3s agent | 29.4.2 |
 | swarm-worker2 | <WORKER2_IP> | Swarm worker / k3s agent | 29.4.2 |
 
 Prerequisites:
+
 - Active Swarm (3 nodes UP): `docker node ls`
 - k3s operational: `kubectl get nodes`
 - SSH access to all three nodes
@@ -47,21 +50,24 @@ docker network create lab5-net
 No execution required. Memorize for the exam:
 
 **Docker Engine (CE) — practical minimums:**
+
 | Resource | Recommended minimum |
-|---|---|
+| --- | --- |
 | OS | Linux 64-bit (kernel ≥ 3.10) |
 | CPU | 2 cores |
 | RAM | 2 GB |
 | Disk | 10 GB free in `/var/lib/docker` |
 
 **Docker Enterprise / Mirantis Kubernetes Engine (MKE) — official sizing:**
+
 | Role | CPU | RAM | Disk |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Manager (UCP) | 8 cores | 16 GB | 100 GB (SSD recommended) |
 | Worker | 4 cores | 4 GB | 25 GB |
 | DTR | 8 cores | 16 GB | 100 GB |
 
 Key exam points:
+
 - The storage driver is configured in `daemon.json` — changing it requires restarting the daemon and **loses all existing container/image data**.
 - `overlay2` is the recommended driver for all modern filesystems (ext4, xfs with `d_type=true`).
 - `devicemapper` in `loop-lvm` mode is for development only — `direct-lvm` for production.
@@ -142,7 +148,8 @@ Filesystem features:      has_journal ext_attr resize_inode dir_index filetype n
 ```
 
 Expected output on Debian 12:
-```
+
+```bash
 Storage Driver: overlay2
  Backing Filesystem: extfs
 ```
@@ -183,7 +190,7 @@ Storage Driver: overlayfs
 ```
 
 | Driver | Recommended OS / FS | Production | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `overlay2` | Linux / ext4, xfs (d_type=true) | ✅ Recommended | Default in modern Docker CE |
 | `devicemapper` | Linux / any block device | ⚠️ direct-lvm only | Legacy, not recommended |
 | `vfs` | Any | ❌ Testing only | No CoW, one copy per layer |
@@ -352,7 +359,7 @@ docker info | grep -A1 "Plugins"
 ```
 
 | Driver | Use | `docker logs` | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `json-file` | Default, development | ✅ Yes | Files under `/var/lib/docker/containers/<id>/` |
 | `journald` | Production systemd | ❌ No | Query with `journalctl` |
 | `syslog` | Syslog/rsyslog | ❌ No | Sends to remote syslog |
@@ -531,6 +538,7 @@ docker inspect <container_id> | jq '.[0].State'
 #### 6c. Docker EE conceptual topics (3.5, 3.10, 3.11)
 
 **3.5 — Users and teams in UCP (Docker Enterprise):**
+
 - UCP (Universal Control Plane) has native RBAC
 - Roles: `None`, `View Only`, `Restricted Control`, `Scheduler`, `Full Control`
 - Teams are organized into organizations
@@ -538,12 +546,14 @@ docker inspect <container_id> | jq '.[0].State'
 - No Docker EE environment available — evaluated theoretically on the exam
 
 **3.10 — Deploying Docker Engine, UCP, and DTR (HA):**
+
 - Minimum HA UCP: 3 managers (tolerates 1 failure)
 - Minimum HA DTR: 3 replicas with shared storage (NFS/S3)
 - Process: install Docker Engine → install UCP → install DTR and point it to UCP
 - AWS: UCP on EC2 with ELB + RDS for state, S3 for DTR storage
 
 **3.11 — UCP and DTR backup:**
+
 - UCP backup: `docker container run --rm docker/ucp backup > ucp-backup.tar`
 - DTR backup: `docker run --rm docker/dtr backup --ucp-url <URL> > dtr-backup.tar`
 - Recommended frequency: daily, store outside the cluster
@@ -648,9 +658,11 @@ docker rm -f overlay-test
 #### 7c. devicemapper and object/block storage [CONCEPTUAL] (topics 6.2, 6.3)
 
 **6.2 — devicemapper:**
+
 - `loop-lvm`: uses files as block devices — development only, slow I/O
 - `direct-lvm`: dedicated block device (LVM thin pool) — production
 - Configuration in daemon.json:
+
   ```json
   {
     "storage-driver": "devicemapper",
@@ -661,11 +673,13 @@ docker rm -f overlay-test
     ]
   }
   ```
+
 - No longer recommended in Docker 20+ — migrate to overlay2
 
 **6.3 — Object vs Block vs File storage:**
+
 | Type | Example | Use in Docker | Protocol |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Block | AWS EBS, LVM, iSCSI | devicemapper, raw volumes | SCSI/NVMe |
 | File (NFS) | NFS, CIFS/SMB, AWS EFS | Named volumes with NFS driver | NFS/SMB |
 | Object | AWS S3, MinIO | DTR storage backend, logs | HTTP/REST |
@@ -743,7 +757,7 @@ in memory
 ```
 
 | Type | Persistence | Shareable | Performance | Use |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Named volume | ✅ Yes | Between containers | High | Application data in production |
 | Bind mount | ✅ Yes (host) | With the host | High | Dev, config files |
 | tmpfs | ❌ RAM only | No | Very high | Sensitive temporary data |
@@ -1006,6 +1020,7 @@ docker plugin ls
 ```
 
 Plugins relevant to the exam:
+
 - `local` (default) — local storage on the node
 - `vieux/sshfs` — NAS via SFTP
 - `rexray` — cloud volumes (AWS EBS, Azure Disk, etc.)
@@ -1159,30 +1174,33 @@ kubectl get csidrivers 2>/dev/null || echo "No additional CSI drivers installed"
 ```
 
 CSI (Container Storage Interface) — the standard for storage plugins in Kubernetes:
+
 - Decouples storage code from the Kubernetes core
 - Examples: `ebs.csi.aws.com`, `pd.csi.storage.gke.io`, `disk.csi.azure.com`
 - `local-path-provisioner` is not CSI — it's a simplified provisioner
 - In production: install the provider's CSI driver → create a StorageClass → PVCs use it automatically
 
-# storageclass-ebs.yaml   
-apiVersion: storage.k8s.io/v1   
-kind: StorageClass                        
+# storageclass-ebs.yaml
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: ebs-sc                       
-provisioner: ebs.csi.aws.com    
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
 parameters:
-  type: gp3                             
+  type: gp3
   encrypted: "true"
-reclaimPolicy: Delete               
-volumeBindingMode: WaitForFirstConsumer                                              
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
 
 # pvc-ebs.yaml
+
 apiVersion: v1
 kind: PersistentVolumeClaim
-metadata:                                
+metadata:
   name: ebs-pvc
-spec:                             
-  accessModes:                              
+spec:
+  accessModes:
     - ReadWriteOnce
   storageClassName: ebs-sc
   resources:
@@ -1190,10 +1208,11 @@ spec:
       storage: 10Gi
 
 # pod-ebs.yaml
-apiVersion: v1                     
+
+apiVersion: v1
 kind: Pod
-metadata:                               
-  name: app-pod                                         
+metadata:
+  name: app-pod
 spec:
   containers:
     - name: app
@@ -1202,8 +1221,9 @@ spec:
         - mountPath: /data
           name: ebs-vol
   volumes:
-  - name: ebs-vol                                                       
-      persistentVolumeClaim:                               
+
+- name: ebs-vol
+      persistentVolumeClaim:
         claimName: ebs-pvc
 
 ```bash
@@ -1271,7 +1291,7 @@ rm -rf ~/lab5
 ## Common issues
 
 | Issue | Cause | Solution |
-|---|---|---|
+| --- | --- | --- |
 | `docker logs` doesn't work | Log driver ≠ json-file/journald | Use the driver's own tool (journalctl, splunk) |
 | PVC stuck in `Pending` | local-path waits for the first consumer | Create the Pod — the PV is provisioned on startup |
 | NFS mount fails on worker | nfs-common not installed | `apt-get install nfs-common` on each worker |
@@ -1284,6 +1304,7 @@ rm -rf ~/lab5
 ## DCA/SRE lessons
 
 ### Domain 3 — Installation & Configuration (15%)
+
 - `overlay2` is the correct storage driver for Debian/Ubuntu in production — remember that changing drivers destroys all existing images and containers
 - `daemon.json` centralizes all daemon configuration — invalid JSON prevents Docker from starting
 - Daemon logs live in `journalctl -u docker` — mandatory first step in troubleshooting
@@ -1291,6 +1312,7 @@ rm -rf ~/lab5
 - Docker EE (UCP/DTR) — conceptual only: RBAC, organizations/teams, backup via the official image
 
 ### Domain 6 — Storage & Volumes (10%)
+
 - Named volumes are **local to the node** — in Swarm, use NFS or placement constraints for real persistence
 - `docker system df` is the SRE command for auditing Docker disk usage before a cleanup
 - In Kubernetes, `local-path` provisions dynamically but only supports `RWO` — `RWX` (shared) requires NFS/CephFS
@@ -1298,5 +1320,6 @@ rm -rf ~/lab5
 - CSI is the storage extensibility standard in Kubernetes — the cloud provider supplies the driver
 
 **DCA mapping:**
+
 - Domain 3: Installation & Configuration — **15% of the exam** (topics 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.9, 3.10, 3.11)
 - Domain 6: Storage & Volumes — **10% of the exam** (topics 6.1–6.9)

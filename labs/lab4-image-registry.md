@@ -18,7 +18,7 @@ DCA competencies: **2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.1
 ## DCA topics covered
 
 | Topic | Description | Exercise |
-|---|---|---|
+| --- | --- | --- |
 | 2.1 | Using the Dockerfile | 1 |
 | 2.2 | ADD, COPY, VOLUMES, EXPOSE, ENTRYPOINT | 1 |
 | 2.3 | Main parts of a Dockerfile | 1 |
@@ -1222,7 +1222,7 @@ docker system df
 ### Topics covered with a hands-on exercise
 
 | Topic | Main lesson |
-|---|---|
+| --- | --- |
 | **2.1** | Dockerfile as a declarative recipe: each instruction creates an immutable layer |
 | **2.2** | COPY > ADD (ADD only for URLs or tar with extraction); ENTRYPOINT fixed + CMD overridable |
 | **2.3** | ARG: build-time only. ENV: persists in the image and container. USER sets process identity |

@@ -14,7 +14,7 @@ DCA competency covered: 5.2 Describe the process of signing an image /
 ## Environment
 
 | Element | Value |
-|---|---|
+| --- | --- |
 | Node | Docker Labs VM — <MANAGER_IP> |
 | OS | Debian 12 |
 | Docker Engine | >= 24.x (verify with `docker version`) |
@@ -23,6 +23,7 @@ DCA competency covered: 5.2 Describe the process of signing an image /
 | External account | Active Docker Hub account (for push + DCT) |
 
 Prerequisites:
+
 - Docker Engine installed and the daemon active (`systemctl is-active docker`)
 - The <admin_user> user belongs to the docker group (`groups | grep docker`)
 - Docker Hub account with push access (`docker login` functional)
@@ -70,8 +71,8 @@ docker inspect ${DOCKERHUB_USER}/dca-lab1:1.0 | grep -E "Id|Size|Created"
         "Size": 12043702,
 docker push ${DOCKERHUB_USER}/dca-lab1:1.0
 ```
----
 
+---
 
 ### Exercise 5 — Trivy: scan the image for CVEs
 
@@ -215,6 +216,7 @@ Legend:
 Exit code: 0
 
 ```
+
 ---
 
 ## Verification
@@ -251,6 +253,7 @@ echo "Scan completed"
 echo ""
 echo "=== END VERIFICATION ==="
 ```
+
 ---
 
 ### Incidents
@@ -261,7 +264,7 @@ echo "=== END VERIFICATION ==="
 
 During `docker login` the following warning appeared:
 
-```
+```bash
 WARNING! Your password will be stored unencrypted in /home/<admin_user>/.docker/config.json.
 Configure a credential helper to remove this warning. See
 https://docs.docker.com/engine/reference/commandline/login/#credentials-store
@@ -365,7 +368,7 @@ Credentials are retrieved at runtime by calling
 Running `docker build -t ${DOCKERHUB_USER}/dca-lab1:1.0 .` with BuildKit enabled
 (the default behavior since Docker 23.x), the build fails with:
 
-```
+```bash
 ERROR: failed to build: failed to solve: error getting credentials - err: exit status 1, out: `exit status 2: gpg: decryption failed: No secret key`
 ```
 
@@ -448,7 +451,7 @@ have feature parity with BuildKit. Useful only for diagnostics.
 
 **Symptom**
 
-```
+```bash
 error getting credentials - err: exit status 1, out: `exit status 2: gpg: Sorry, we are in batchmode - can't get input`
 ```
 
@@ -510,7 +513,7 @@ gpgconf --kill gpg-agent
 ### Exam topics reinforced
 
 | DCA Topic | Domain | Exercise | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 5.2 — Signing an image (DCT, Notary, TUF) | Security (15%) | Exercises 2, 3, 4, 6 | Conceptual — not executable on Docker 29.x |
 | 5.9 — Image passes a security scan | Security (15%) | Exercise 5 | Completed |
 
