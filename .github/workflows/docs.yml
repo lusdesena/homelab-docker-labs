@@ -18,4 +18,4 @@ jobs:
   links:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "TODO: link check con lychee"
+      - run: 'echo "TODO: link check con lychee"'
