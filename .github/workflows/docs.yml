@@ -17,3 +17,5 @@ jobs:
       - run: npx --yes markdownlint-cli2 "**/*.md"
   links:
     runs-on: ubuntu-latest
+    steps:
+      - run: echo "TODO: link check con lychee"
